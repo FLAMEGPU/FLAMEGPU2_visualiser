@@ -675,12 +675,22 @@ void Visualiser::resizeWindow() {
         this->windowDims = tDims;
     }
     //  Get the view frustum using GLM. Alternatively glm::perspective could be used.
-    this->projMat = glm::perspectiveFov<float>(
-        glm::radians(FOVY),
-        static_cast<float>(this->windowDims.x),
-        static_cast<float>(this->windowDims.y),
-        modelConfig.nearFarClip[0],
-        modelConfig.nearFarClip[1]);
+    if (isPerspectiveProjection) {
+        this->projMat = glm::perspectiveFov<float>(
+            glm::radians(FOVY),
+            static_cast<float>(this->windowDims.x),
+            static_cast<float>(this->windowDims.y),
+            modelConfig.nearFarClip[0],
+            modelConfig.nearFarClip[1]);
+    } else {
+        this->projMat = glm::ortho<float>(
+            -static_cast<float>(this->windowDims.x) / 100.0f,
+            static_cast<float>(this->windowDims.x) / 100.0f,
+            -static_cast<float>(this->windowDims.y) / 100.0f,
+            static_cast<float>(this->windowDims.y) / 100.0f,
+            modelConfig.nearFarClip[0],
+            modelConfig.nearFarClip[1]);
+    }
     //  Notify other elements
     this->hud->resizeWindow(this->windowDims);
     //  if (this->scene)
@@ -774,6 +784,9 @@ void Visualiser::handleKeypress(SDL_Keycode keycode, int /*x*/, int /*y*/) {
     case SDLK_F10:
         this->setMSAA(!this->msaaState);
         break;
+    case SDLK_F9:
+        this->toggleProjection();
+        break;
     case SDLK_F8:
         this->toggleFPSStatus();
         break;
@@ -839,6 +852,10 @@ void Visualiser::toggleMouseMode() {
     } else {
         SDL_SetRelativeMouseMode(SDL_TRUE);
     }
+}
+void Visualiser::toggleProjection() {
+    isPerspectiveProjection = !isPerspectiveProjection;
+    resizeWindow();
 }
 void Visualiser::updateFPS() {
     //  Update the current time
